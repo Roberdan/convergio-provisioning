@@ -1,5 +1,4 @@
 # cargo-deny configuration (v2 format)
-# Docs: https://embarkstudios.github.io/cargo-deny/
 
 [graph]
 targets = []
@@ -28,14 +27,27 @@ confidence-threshold = 0.8
 allow = ["LicenseRef-Convergio-Community"]
 crate = "convergio-provisioning"
 
+[[licenses.exceptions]]
+allow = ["LicenseRef-Convergio-Community"]
+crate = "convergio-types"
+
+[[licenses.exceptions]]
+allow = ["LicenseRef-Convergio-Community"]
+crate = "convergio-telemetry"
+
+[[licenses.exceptions]]
+allow = ["LicenseRef-Convergio-Community"]
+crate = "convergio-db"
+
+[[licenses.exceptions]]
+allow = ["LicenseRef-Convergio-Community"]
+crate = "convergio-security"
+
 [bans]
 multiple-versions = "warn"
-wildcards = "allow"  # workspace deps use wildcards internally
+wildcards = "allow"
 
 [sources]
 unknown-registry = "deny"
 unknown-git = "allow"
-allow-git = [
-    "https://github.com/Roberdan/convergio-sdk",
-    "https://github.com/Roberdan/convergio-db",
-]
+allow-git = ["https://github.com/Roberdan/convergio-sdk"]
