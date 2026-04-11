@@ -1,21 +1,21 @@
-//! # convergio-provisioning
+//! convergio-provisioning — sync config/keys/binary to remote nodes.
 //!
-//! Node provisioning — sync config, keys, binary to remote peers
+//! Orchestrates rsync operations to provision peer nodes with:
+//! - Config files (~/.convergio/config.toml, env)
+//! - Agent definitions (claude-config/ TOML files)
+//! - Daemon binary (target/release/convergio)
+//! - Memory/context data
 //!
-//! Part of the [Convergio](https://github.com/Roberdan/convergio) ecosystem.
+//! DB tables: provision_runs, provision_items.
 
+pub mod ext;
+pub mod provision;
 pub mod routes;
+pub mod types;
 
-// Uncomment as needed:
-// pub mod ext;
-// pub mod mcp_defs;
-// pub mod schema;
-// pub mod types;
+pub use ext::ProvisioningExtension;
+pub use types::{ProvisionItem, ProvisionRun, ProvisionStatus};
 
+pub mod mcp_defs;
 #[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert!(true);
-    }
-}
+mod tests;
