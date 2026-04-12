@@ -17,6 +17,29 @@ use serde_json::{json, Value};
 use crate::provision::provision_peer;
 use crate::types::ProvisionRequest;
 
+/// Validate provisioning request fields to prevent injection/traversal.
+pub fn validate_request(req: &ProvisionRequest) -> Result<(), String> {
+    if req.peer_name.is_empty() || req.peer_name.len() > 128 {
+        return Err("peer_name must be 1-128 characters".into());
+    }
+    if req.ssh_target.is_empty() || req.ssh_target.len() > 256 {
+        return Err("ssh_target must be 1-256 characters".into());
+    }
+    // Block shell metacharacters in ssh_target
+    if req.ssh_target.contains(|c: char| {
+        matches!(
+            c,
+            ';' | '&' | '|' | '$' | '`' | '\'' | '"' | '\\' | '\n' | '\r'
+        )
+    }) {
+        return Err("ssh_target contains invalid characters".into());
+    }
+    if req.remote_base.contains("..") {
+        return Err("remote_base must not contain path traversal".into());
+    }
+    Ok(())
+}
+
 pub struct ProvisionState {
     pub pool: ConnPool,
 }
@@ -33,12 +56,21 @@ async fn handle_provision(
     State(s): State<Arc<ProvisionState>>,
     Json(req): Json<ProvisionRequest>,
 ) -> Json<Value> {
+    if let Err(e) = validate_request(&req) {
+        return Json(json!({"error": e}));
+    }
     let pool = s.pool.clone();
     let peer = req.peer_name.clone();
-    tokio::spawn(async move {
+    let handle = tokio::spawn(async move {
         match provision_peer(&pool, &req).await {
             Ok(run_id) => tracing::info!(run_id, peer = %peer, "provisioning complete"),
             Err(e) => tracing::warn!(peer = %peer, error = %e, "provisioning failed"),
+        }
+    });
+    // Log if the spawned task panics
+    tokio::spawn(async move {
+        if let Err(e) = handle.await {
+            tracing::error!(error = %e, "provisioning task panicked");
         }
     });
     Json(json!({"ok": true, "message": "provisioning started"}))
@@ -58,17 +90,16 @@ async fn handle_list_runs(
         Err(e) => return Json(json!({"error": e.to_string()})),
     };
     let limit = q.limit.unwrap_or(20).min(100);
-    let sql = format!(
+    let mut stmt = match conn.prepare(
         "SELECT id, peer_name, ssh_target, status, items_total, items_done, \
          started_at, completed_at, error_message \
-         FROM provision_runs ORDER BY id DESC LIMIT {limit}"
-    );
-    let mut stmt = match conn.prepare(&sql) {
+         FROM provision_runs ORDER BY id DESC LIMIT ?1",
+    ) {
         Ok(s) => s,
         Err(e) => return Json(json!({"error": e.to_string()})),
     };
     let rows: Vec<Value> = stmt
-        .query_map([], |r| {
+        .query_map([limit], |r| {
             Ok(json!({
                 "id": r.get::<_, i64>(0)?,
                 "peer_name": r.get::<_, String>(1)?,

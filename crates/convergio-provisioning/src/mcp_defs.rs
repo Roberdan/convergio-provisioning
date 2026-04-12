@@ -13,10 +13,15 @@ pub fn provisioning_tools() -> Vec<McpToolDef> {
             input_schema: json!({
                 "type": "object",
                 "properties": {
-                    "hostname": {"type": "string"},
-                    "ssh_user": {"type": "string"}
+                    "peer_name": {"type": "string", "description": "Name of the peer node"},
+                    "ssh_target": {"type": "string", "description": "SSH target (e.g. user@host)"},
+                    "remote_base": {"type": "string", "description": "Remote base path"},
+                    "include_binary": {"type": "boolean"},
+                    "include_config": {"type": "boolean"},
+                    "include_agent_defs": {"type": "boolean"},
+                    "include_memory": {"type": "boolean"}
                 },
-                "required": ["hostname"]
+                "required": ["peer_name", "ssh_target"]
             }),
             min_ring: "core".into(),
             path_params: vec![],
@@ -34,7 +39,7 @@ pub fn provisioning_tools() -> Vec<McpToolDef> {
             name: "cvg_provision_run".into(),
             description: "Get details of a provisioning run.".into(),
             method: "GET".into(),
-            path: "/api/provision/run/:id".into(),
+            path: "/api/provision/run/{id}".into(),
             input_schema: json!({
                 "type": "object",
                 "properties": {"id": {"type": "string"}},
