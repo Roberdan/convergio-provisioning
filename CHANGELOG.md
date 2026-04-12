@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/Roberdan/convergio-provisioning/compare/convergio-provisioning-v0.1.2...convergio-provisioning-v0.1.3) (2026-04-12)
+
+
+### Documentation
+
+* add .env.example with required environment variables ([#6](https://github.com/Roberdan/convergio-provisioning/issues/6)) ([82a7577](https://github.com/Roberdan/convergio-provisioning/commit/82a7577334f2fbd4fe2cc035a9f55c0bc890cb53))
+
 ## [0.1.2](https://github.com/Roberdan/convergio-provisioning/compare/convergio-provisioning-v0.1.1...convergio-provisioning-v0.1.2) (2026-04-12)
 
 
