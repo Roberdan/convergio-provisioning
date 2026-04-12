@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/Roberdan/convergio-provisioning/compare/convergio-provisioning-v0.1.1...convergio-provisioning-v0.1.2) (2026-04-12)
+
+
+### Bug Fixes
+
+* security hardening and bug fixes ([#4](https://github.com/Roberdan/convergio-provisioning/issues/4)) ([5c5875a](https://github.com/Roberdan/convergio-provisioning/commit/5c5875a6856e4d3fb714b3a3cdb736a6ddef30ca))
+
 ## [0.1.1](https://github.com/Roberdan/convergio-provisioning/compare/convergio-provisioning-v0.1.0...convergio-provisioning-v0.1.1) (2026-04-11)
 
 
