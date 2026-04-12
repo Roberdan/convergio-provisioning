@@ -13,6 +13,10 @@ pub async fn provision_peer(pool: &ConnPool, req: &ProvisionRequest) -> Result<i
     let mut items_total = 0u32;
     let mut last_error: Option<String> = None;
 
+    let repo_root = std::env::var("CONVERGIO_REPO_ROOT")
+        .or_else(|_| std::env::current_dir().map(|p| p.display().to_string()))
+        .unwrap_or_else(|_| ".".into());
+
     // Config files
     if req.include_config {
         items_total += 1;
@@ -36,9 +40,6 @@ pub async fn provision_peer(pool: &ConnPool, req: &ProvisionRequest) -> Result<i
     // Agent definitions
     if req.include_agent_defs {
         items_total += 1;
-        let repo_root = std::env::var("CONVERGIO_REPO_ROOT")
-            .or_else(|_| std::env::current_dir().map(|p| p.display().to_string()))
-            .unwrap_or_else(|_| ".".into());
         let source = format!("{repo_root}/claude-config/");
         let dest = format!("{}/agent-defs/", req.remote_base);
         match rsync_item(
@@ -60,9 +61,6 @@ pub async fn provision_peer(pool: &ConnPool, req: &ProvisionRequest) -> Result<i
     // Binary
     if req.include_binary {
         items_total += 1;
-        let repo_root = std::env::var("CONVERGIO_REPO_ROOT")
-            .or_else(|_| std::env::current_dir().map(|p| p.display().to_string()))
-            .unwrap_or_else(|_| ".".into());
         let source = format!("{repo_root}/daemon/target/release/convergio");
         let dest = format!("{}/bin/convergio", req.remote_base);
         match rsync_item(
@@ -180,10 +178,12 @@ fn create_run(pool: &ConnPool, peer: &str, ssh: &str) -> Result<i64, String> {
 
 fn update_run_status(pool: &ConnPool, id: i64, status: ProvisionStatus) {
     if let Ok(conn) = pool.get() {
-        let _ = conn.execute(
+        if let Err(e) = conn.execute(
             "UPDATE provision_runs SET status = ?1 WHERE id = ?2",
             rusqlite::params![status.to_string(), id],
-        );
+        ) {
+            tracing::warn!(run_id = id, error = %e, "failed to update run status");
+        }
     }
 }
 
@@ -196,11 +196,13 @@ fn complete_run(
     error: Option<String>,
 ) {
     if let Ok(conn) = pool.get() {
-        let _ = conn.execute(
+        if let Err(e) = conn.execute(
             "UPDATE provision_runs SET status=?1, items_total=?2, items_done=?3, \
              error_message=?4, completed_at=datetime('now') WHERE id=?5",
             rusqlite::params![status.to_string(), total, done, error, id],
-        );
+        ) {
+            tracing::warn!(run_id = id, error = %e, "failed to complete run");
+        }
     }
 }
 
@@ -223,10 +225,12 @@ fn create_item(
 
 fn update_item_status(pool: &ConnPool, id: i64, status: ProvisionStatus) {
     if let Ok(conn) = pool.get() {
-        let _ = conn.execute(
+        if let Err(e) = conn.execute(
             "UPDATE provision_items SET status = ?1 WHERE id = ?2",
             rusqlite::params![status.to_string(), id],
-        );
+        ) {
+            tracing::warn!(item_id = id, error = %e, "failed to update item status");
+        }
     }
 }
 
@@ -239,10 +243,12 @@ fn complete_item(
     error: Option<&str>,
 ) {
     if let Ok(conn) = pool.get() {
-        let _ = conn.execute(
+        if let Err(e) = conn.execute(
             "UPDATE provision_items SET status=?1, bytes_transferred=?2, \
              duration_ms=?3, error_message=?4 WHERE id=?5",
             rusqlite::params![status.to_string(), bytes, duration_ms, error, id],
-        );
+        ) {
+            tracing::warn!(item_id = id, error = %e, "failed to complete item");
+        }
     }
 }
