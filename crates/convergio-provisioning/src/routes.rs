@@ -17,26 +17,49 @@ use serde_json::{json, Value};
 use crate::provision::provision_peer;
 use crate::types::ProvisionRequest;
 
-/// Validate provisioning request fields to prevent injection/traversal.
-pub fn validate_request(req: &ProvisionRequest) -> Result<(), String> {
-    if req.peer_name.is_empty() || req.peer_name.len() > 128 {
-        return Err("peer_name must be 1-128 characters".into());
-    }
-    if req.ssh_target.is_empty() || req.ssh_target.len() > 256 {
-        return Err("ssh_target must be 1-256 characters".into());
-    }
-    // Block shell metacharacters in ssh_target
-    if req.ssh_target.contains(|c: char| {
+/// Characters that could trigger shell interpretation on the remote side.
+fn has_shell_metachar(s: &str) -> bool {
+    s.contains(|c: char| {
         matches!(
             c,
             ';' | '&' | '|' | '$' | '`' | '\'' | '"' | '\\' | '\n' | '\r'
         )
-    }) {
+    })
+}
+
+/// Validate provisioning request fields to prevent injection/traversal.
+pub fn validate_request(req: &ProvisionRequest) -> Result<(), String> {
+    // peer_name: alphanumeric, dash, underscore, dot only
+    if req.peer_name.is_empty() || req.peer_name.len() > 128 {
+        return Err("peer_name must be 1-128 characters".into());
+    }
+    if !req
+        .peer_name
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.'))
+    {
+        return Err("peer_name must contain only alphanumeric, dash, underscore, or dot".into());
+    }
+
+    // ssh_target: length + no shell metacharacters
+    if req.ssh_target.is_empty() || req.ssh_target.len() > 256 {
+        return Err("ssh_target must be 1-256 characters".into());
+    }
+    if has_shell_metachar(&req.ssh_target) {
         return Err("ssh_target contains invalid characters".into());
+    }
+
+    // remote_base: length, no traversal, no shell metacharacters
+    if req.remote_base.is_empty() || req.remote_base.len() > 512 {
+        return Err("remote_base must be 1-512 characters".into());
     }
     if req.remote_base.contains("..") {
         return Err("remote_base must not contain path traversal".into());
     }
+    if has_shell_metachar(&req.remote_base) {
+        return Err("remote_base contains invalid characters".into());
+    }
+
     Ok(())
 }
 

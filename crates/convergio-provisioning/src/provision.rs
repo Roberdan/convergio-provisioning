@@ -177,13 +177,18 @@ fn create_run(pool: &ConnPool, peer: &str, ssh: &str) -> Result<i64, String> {
 }
 
 fn update_run_status(pool: &ConnPool, id: i64, status: ProvisionStatus) {
-    if let Ok(conn) = pool.get() {
-        if let Err(e) = conn.execute(
-            "UPDATE provision_runs SET status = ?1 WHERE id = ?2",
-            rusqlite::params![status.to_string(), id],
-        ) {
-            tracing::warn!(run_id = id, error = %e, "failed to update run status");
+    let conn = match pool.get() {
+        Ok(c) => c,
+        Err(e) => {
+            tracing::warn!(run_id = id, error = %e, "pool error updating run status");
+            return;
         }
+    };
+    if let Err(e) = conn.execute(
+        "UPDATE provision_runs SET status = ?1 WHERE id = ?2",
+        rusqlite::params![status.to_string(), id],
+    ) {
+        tracing::warn!(run_id = id, error = %e, "failed to update run status");
     }
 }
 
@@ -195,14 +200,19 @@ fn complete_run(
     done: u32,
     error: Option<String>,
 ) {
-    if let Ok(conn) = pool.get() {
-        if let Err(e) = conn.execute(
-            "UPDATE provision_runs SET status=?1, items_total=?2, items_done=?3, \
-             error_message=?4, completed_at=datetime('now') WHERE id=?5",
-            rusqlite::params![status.to_string(), total, done, error, id],
-        ) {
-            tracing::warn!(run_id = id, error = %e, "failed to complete run");
+    let conn = match pool.get() {
+        Ok(c) => c,
+        Err(e) => {
+            tracing::warn!(run_id = id, error = %e, "pool error completing run");
+            return;
         }
+    };
+    if let Err(e) = conn.execute(
+        "UPDATE provision_runs SET status=?1, items_total=?2, items_done=?3, \
+         error_message=?4, completed_at=datetime('now') WHERE id=?5",
+        rusqlite::params![status.to_string(), total, done, error, id],
+    ) {
+        tracing::warn!(run_id = id, error = %e, "failed to complete run");
     }
 }
 
@@ -224,13 +234,18 @@ fn create_item(
 }
 
 fn update_item_status(pool: &ConnPool, id: i64, status: ProvisionStatus) {
-    if let Ok(conn) = pool.get() {
-        if let Err(e) = conn.execute(
-            "UPDATE provision_items SET status = ?1 WHERE id = ?2",
-            rusqlite::params![status.to_string(), id],
-        ) {
-            tracing::warn!(item_id = id, error = %e, "failed to update item status");
+    let conn = match pool.get() {
+        Ok(c) => c,
+        Err(e) => {
+            tracing::warn!(item_id = id, error = %e, "pool error updating item status");
+            return;
         }
+    };
+    if let Err(e) = conn.execute(
+        "UPDATE provision_items SET status = ?1 WHERE id = ?2",
+        rusqlite::params![status.to_string(), id],
+    ) {
+        tracing::warn!(item_id = id, error = %e, "failed to update item status");
     }
 }
 
@@ -242,13 +257,18 @@ fn complete_item(
     duration_ms: u64,
     error: Option<&str>,
 ) {
-    if let Ok(conn) = pool.get() {
-        if let Err(e) = conn.execute(
-            "UPDATE provision_items SET status=?1, bytes_transferred=?2, \
-             duration_ms=?3, error_message=?4 WHERE id=?5",
-            rusqlite::params![status.to_string(), bytes, duration_ms, error, id],
-        ) {
-            tracing::warn!(item_id = id, error = %e, "failed to complete item");
+    let conn = match pool.get() {
+        Ok(c) => c,
+        Err(e) => {
+            tracing::warn!(item_id = id, error = %e, "pool error completing item");
+            return;
         }
+    };
+    if let Err(e) = conn.execute(
+        "UPDATE provision_items SET status=?1, bytes_transferred=?2, \
+         duration_ms=?3, error_message=?4 WHERE id=?5",
+        rusqlite::params![status.to_string(), bytes, duration_ms, error, id],
+    ) {
+        tracing::warn!(item_id = id, error = %e, "failed to complete item");
     }
 }

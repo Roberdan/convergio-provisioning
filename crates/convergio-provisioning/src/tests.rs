@@ -185,4 +185,33 @@ mod validation_tests {
         req.remote_base = "/etc/../../../root".into();
         assert!(validate_request(&req).is_err());
     }
+
+    #[test]
+    fn shell_metachar_in_remote_base_rejected() {
+        for bad in &[";", "&", "|", "$", "`", "'", "\"", "\\"] {
+            let mut req = valid_request();
+            req.remote_base = format!("/home/user{bad}evil");
+            assert!(validate_request(&req).is_err(), "should reject: {bad}");
+        }
+    }
+
+    #[test]
+    fn peer_name_with_special_chars_rejected() {
+        let mut req = valid_request();
+        req.peer_name = "peer;evil".into();
+        assert!(validate_request(&req).is_err());
+
+        req.peer_name = "peer name".into();
+        assert!(validate_request(&req).is_err());
+
+        req.peer_name = "peer\0null".into();
+        assert!(validate_request(&req).is_err());
+    }
+
+    #[test]
+    fn empty_remote_base_rejected() {
+        let mut req = valid_request();
+        req.remote_base = String::new();
+        assert!(validate_request(&req).is_err());
+    }
 }
