@@ -4,6 +4,7 @@ description = "Node provisioning — sync config, keys, binary to remote peers"
 version = "0.1.6"
 edition.workspace = true
 license.workspace = true
+repository = "https://github.com/Roberdan/convergio-provisioning"
 readme = "../../README.md"
 
 [dependencies]
