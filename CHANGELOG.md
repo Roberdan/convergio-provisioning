@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/Roberdan/convergio-provisioning/compare/v0.1.5...v0.1.6) (2026-04-13)
+
+
+### Bug Fixes
+
+* regenerate Cargo.lock after SDK bump ([#10](https://github.com/Roberdan/convergio-provisioning/issues/10)) ([7792a74](https://github.com/Roberdan/convergio-provisioning/commit/7792a7409a599e579b9335eb084ef1f2540c12d1))
+
 ## [0.1.5](https://github.com/Roberdan/convergio-provisioning/compare/v0.1.4...v0.1.5) (2026-04-13)
 
 
