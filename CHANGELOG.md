@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9](https://github.com/Roberdan/convergio-provisioning/compare/v0.1.8...v0.1.9) (2026-04-14)
+
+
+### Bug Fixes
+
+* harden input validation and eliminate error swallowing ([7307621](https://github.com/Roberdan/convergio-provisioning/commit/73076217b445986fa3e29c8d9d77748326dd4ac0))
+
 ## [0.1.8](https://github.com/Roberdan/convergio-provisioning/compare/v0.1.7...v0.1.8) (2026-04-13)
 
 

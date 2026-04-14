@@ -209,7 +209,7 @@ dependencies = [
 
 [[package]]
 name = "convergio-provisioning"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "axum",
  "convergio-db",
